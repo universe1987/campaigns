@@ -14,9 +14,9 @@ def html_to_json(url):
     soup = BeautifulSoup(html_doc, 'html.parser')
 
     table_title = None
-    is_title_row = False
     result = {}
     for tr in soup.find_all('tr'):
+        is_title_row = False
         row_content = []
         for td in tr.find_all('td'):
             if td.find_all('img'):
@@ -34,7 +34,6 @@ def html_to_json(url):
             row_content.append({'text': text, 'link': link})
 
         if is_title_row:
-            is_title_row = False
             continue
 
         if not row_content or not table_title:
@@ -48,9 +47,11 @@ def html_to_json(url):
 
         elif isinstance(row_titles, str) or isinstance(row_titles, unicode):
             if len(row_content) <= 1:
+                table_title = None
                 continue
             second_cell_text = row_content[1]['text']
             if not re.match(row_titles, second_cell_text):
+                table_title = None
                 continue
             category, race_id = tokenize(row_content[2]['link'])
             result[table_title][race_id] = row_content[1:]
