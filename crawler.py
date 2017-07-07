@@ -2,25 +2,47 @@ import os
 import json
 import csv
 from collections import deque
+from utils import to_camel
+from utils import campactify
 from utils import tokenize
 from utils import is_valid_url
 from html_to_json import html_to_json
 
 
-def crawl(prefix, url, processed):
+def crawl(url):
     q = deque([url])
-    processed.add(url)
+    processed = {url}
     domain = 'http://www.ourcampaigns.com/'
     while q:
         current_url = q.popleft()
         result = html_to_json(domain + current_url)
         category, uid = tokenize(current_url)
+
+        if category == 'race':
+            components = result['RACE DETAILS']['Parents'][0]['text'].split('>')
+            if components[1].strip() != 'United States':
+                continue
+            position = campactify(components[-2] + components[-1])
+            year = int(result['RACE DETAILS']['Term Start'][0]['text'].split('-')[0].split(',')[-1].strip())
+            if year > 2016 or year < 1950:
+                continue
+            description = 'race_{}_{}'.format(position, year)
+        elif category == 'candidate':
+            name = campactify(result['CANDIDATE DETAILS']['Name'][0]['text'])
+            description = 'candidate_{}'.format(name)
+        elif category == 'container':
+            name = campactify(result['INCUMBENT']['Name'][0]['text'])
+            year = result['INCUMBENT']['Won'][0]['text'].split('/')[-1].strip()
+            description = 'container_{}_{}'.format(name, year)
+        print '    ' + description, current_url
         for table_title, table in result.iteritems():
-            camel_title = ''.join([s.capitalize() for s in table_title.replace('/', ' ').split()])
+            camel_title = to_camel(table_title)
             if camel_title not in ['LastGeneralElection', 'PrimaryOtherSchedule']:
-                with open('{}/{}_{}_{}.json'.format(prefix, category, uid, camel_title), 'wb') as fp:
+                with open('data/{}_{}_{}.json'.format(description, uid, camel_title), 'wb') as fp:
                     json.dump(table, fp)
-            for row in table.itervalues():
+            if category == 'race' and 'Governor' not in description:
+                continue
+            for row_title, row in table.iteritems():
                 for cell in row:
                     link = cell['link']
                     if is_valid_url(link) and link not in processed:
@@ -41,8 +63,5 @@ if __name__ == '__main__':
         for row in reader:
             container_id, state, year = row[:3]
             print 'Crawling', state
-            folder_name = 'data/' + state
-            if not os.path.exists(folder_name):
-                os.mkdir(folder_name)
             url = url_template.format(container_id)
-            crawl(folder_name, url, set())
+            crawl(url)

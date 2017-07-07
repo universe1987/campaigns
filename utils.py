@@ -1,5 +1,9 @@
 import os
+import string
 import requests
+from time import sleep
+
+valid = set(string.letters + '-')
 
 
 def clean_up(s):
@@ -20,12 +24,18 @@ def get_html(url):
     name = '{}_{}'.format(category, uid)
     local_cache = 'cache/{}.html'.format(name)
     if not os.path.exists(local_cache):
-        resp = requests.get(url)
-        if resp.status_code == 200:
-            html_doc = resp.content
-            with open(local_cache, 'wb') as fp:
-                fp.write(html_doc)
-            return html_doc
+        while True:
+            try:
+                resp = requests.get(url)
+            except Exception as e:
+                print e
+                continue
+            if resp.status_code == 200:
+                html_doc = resp.content
+                with open(local_cache, 'wb') as fp:
+                    fp.write(html_doc)
+                return html_doc
+            sleep(3)
     else:
         with open(local_cache, 'rb') as fp:
             return fp.read()
@@ -37,3 +47,11 @@ def is_valid_url(url):
         if kw in url:
             return True
     return False
+
+
+def campactify(s):
+    return ''.join([x for x in s if x in valid])
+
+
+def to_camel(s):
+    return ''.join([t.capitalize() for t in s.replace('/', ' ').split()])
