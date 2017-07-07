@@ -42,7 +42,7 @@ def get_html(url):
 
 
 def is_valid_url(url):
-    kws = ['RaceID', 'CandidateID', 'ContainerID']
+    kws = ['RaceID', 'CandidateID']
     for kw in kws:
         if kw in url:
             return True
