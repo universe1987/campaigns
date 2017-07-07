@@ -1,0 +1,39 @@
+{
+	"RACE DETAILS":
+	[
+		"Parents",
+		"Office",
+		"Type",
+		"Filing Deadline",
+		"Polls Open",
+		"Polls Close",
+		"Term Start",
+		"Term End",
+		"Turnout",
+		"Contributor",
+		"Last Modified",
+		"Data Sources"
+	],
+	"LAST GENERAL ELECTION":
+	[
+		"Party",
+		"Won",
+		"Name",
+		"Votes",
+		"Term",
+		"Margin"
+	],
+	"PRIMARY/OTHER SCHEDULE": ".*\\d{2},\\d{4}",
+	"CANDIDATES":
+	[
+		"Photo",
+		"Name",
+		"Party",
+		"Certified Votes",
+		"Margin",
+		"Predict Avg.",
+		"Cash On Hand",
+		"Website",
+		"Entry Date"
+	]
+}

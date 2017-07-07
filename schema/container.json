@@ -1,0 +1,11 @@
+{
+	"INCUMBENT":
+	[
+		"Party",
+		"Name",
+		"Won",
+		"Votes",
+		"Margin",
+		"Term"
+	]
+}

@@ -1,0 +1,17 @@
+{
+ 	"CANDIDATE DETAILS":
+ 	[
+ 		"Affiliation",
+ 		"Name",
+ 		"Address",
+ 		"Email",
+ 		"Website",
+ 		"Born",
+ 		"Contributor",
+ 		"Last Modified",
+ 		"Tags",
+ 		"Info"
+ 	],
+ 	"RACES": "\\d{2}/\\d{2}/\\d{4}"
+ }
+ 

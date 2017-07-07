@@ -7,16 +7,15 @@ from html_to_json import html_to_json
 
 
 def crawl(prefix, url, processed):
-    print url
     processed.add(url)
-    # print url
     domain = 'http://www.ourcampaigns.com/'
     result = html_to_json(domain + url)
     category, uid = tokenize(url)
     for table_title, table in result.iteritems():
         camel_title = ''.join([s.capitalize() for s in table_title.replace('/', ' ').split()])
-        with open('{}/{}_{}_{}.json'.format(prefix, category, uid, camel_title), 'wb') as fp:
-            json.dump(table, fp)
+        if camel_title not in ['LastGeneralElection', 'PrimaryOtherSchedule']:
+            with open('{}/{}_{}_{}.json'.format(prefix, category, uid, camel_title), 'wb') as fp:
+                json.dump(table, fp)
         for row in table.itervalues():
             for cell in row:
                 link = cell['link']
@@ -35,8 +34,8 @@ if __name__ == '__main__':
     with open('governor.csv', 'rb') as fp:
         reader = csv.reader(fp, delimiter=',')
         for row in reader:
-            print row
             container_id, state, year = row[:3]
+            print 'Crawling', state
             folder_name = 'data/' + state
             if not os.path.exists(folder_name):
                 os.mkdir(folder_name)
