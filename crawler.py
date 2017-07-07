@@ -20,6 +20,9 @@ def crawl(url):
 
         if category == 'race':
             components = result['RACE DETAILS']['Parents'][0]['text'].split('>')
+            if len(components) <= 2:
+                print '  Bad', components, current_url
+                continue
             if components[1].strip() != 'United States':
                 continue
             position = campactify(components[-2] + components[-1])
