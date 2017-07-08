@@ -11,7 +11,9 @@ from html_to_json import html_to_json
 
 def crawl(url):
     q = deque([url])
-    processed = {url}
+    with open('processed.txt', 'rb') as fp:
+        processed = set(fp.read().split())
+    processed.add(url)
     domain = 'http://www.ourcampaigns.com/'
     while q:
         current_url = q.popleft()
@@ -19,7 +21,7 @@ def crawl(url):
             current_url = current_url[len(domain):]
         result = html_to_json(domain + current_url)
         if result is None:
-            print 'skip', current_url
+            print '  skip', current_url
             continue
         category, uid = tokenize(current_url)
 
@@ -42,7 +44,7 @@ def crawl(url):
             name = campactify(result['INCUMBENT']['Name'][0]['text'])
             year = result['INCUMBENT']['Won'][0]['text'].split('/')[-1].strip()
             description = 'container_{}_{}'.format(name, year)
-        print '    ' + description, current_url
+        # print '    ' + description, current_url
         for table_title, table in result.iteritems():
             camel_title = to_camel(table_title)
             if camel_title not in ['LastGeneralElection', 'PrimaryOtherSchedule']:
@@ -56,6 +58,8 @@ def crawl(url):
                     if is_valid_url(link) and link not in processed:
                         q.append(link)
                         processed.add(link)
+    with open('processed.txt', 'wb') as fp:
+        fp.write('\n'.join(processed))
 
 
 if __name__ == '__main__':
@@ -65,6 +69,8 @@ if __name__ == '__main__':
     # create a folder for extracted data
     if not os.path.exists('data'):
         os.mkdir('data')
+    with open('processed.txt', 'wb') as fp:
+        pass
     url_template = 'ContainerDetail.html?ContainerID={}'
     with open('governor.csv', 'rb') as fp:
         reader = csv.reader(fp, delimiter=',')
