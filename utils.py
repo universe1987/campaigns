@@ -46,11 +46,10 @@ def get_html(url, max_retry=5):
 
 
 def is_valid_url(url):
-    kws = ['RaceID', 'CandidateID']
-    for kw in kws:
-        if kw in url:
-            return True
-    return False
+    if '=' not in url:
+        return False
+    category, uid = tokenize(url)
+    return category in ['race', 'candidate']
 
 
 def campactify(s):
