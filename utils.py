@@ -19,12 +19,16 @@ def tokenize(url):
     return category, uid
 
 
-def get_html(url):
+def get_html(url, max_retry=5):
     category, uid = tokenize(url)
     name = '{}_{}'.format(category, uid)
     local_cache = 'cache/{}.html'.format(name)
     if not os.path.exists(local_cache):
+        retry_count = 0
         while True:
+            retry_count += 1
+            if retry_count > max_retry:
+                return None
             try:
                 resp = requests.get(url)
             except Exception as e:

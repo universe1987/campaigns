@@ -15,7 +15,12 @@ def crawl(url):
     domain = 'http://www.ourcampaigns.com/'
     while q:
         current_url = q.popleft()
+        if current_url.startswith(domain):
+            current_url = current_url[len(domain):]
         result = html_to_json(domain + current_url)
+        if result is None:
+            print 'skip', current_url
+            continue
         category, uid = tokenize(current_url)
 
         if category == 'race':
