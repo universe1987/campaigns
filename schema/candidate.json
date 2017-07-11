@@ -1,17 +1,29 @@
 {
  	"CANDIDATE DETAILS":
- 	[
- 		"Affiliation",
- 		"Name",
- 		"Address",
- 		"Email",
- 		"Website",
- 		"Born",
- 		"Contributor",
- 		"Last Modified",
- 		"Tags",
- 		"Info"
- 	],
- 	"RACES": "\\d{2}/\\d{2}/\\d{4}"
- }
+	{
+		"column index": 0,
+		"strict match":
+		[
+			"Affiliation",
+			"Name",
+			"Address",
+			"Email",
+			"Website",
+			"Born",
+			"Contributor",
+			"Last Modified",
+			"Tags",
+			"Info"
+		],
+		"regex match": [],
+		"terminate on mismatch": false
+	},
+ 	"RACES":
+	{
+		"column index": 1,
+		"strict match": [],
+		"regex match": ["\\d{2}/\\d{2}/\\d{4}"],
+		"terminate on mismatch": true
+	}
+}
  

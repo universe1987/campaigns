@@ -39,22 +39,28 @@ def html_to_json(url):
         if not row_content or not table_title:
             continue
 
-        if isinstance(row_titles, list):
-            first_cell_text = row_content[0]['text']
-            if first_cell_text not in row_titles or first_cell_text in result[table_title]:
-                continue
-            result[table_title][first_cell_text] = row_content[1:]
+        column_index = row_titles['column index']
+        strict_match = row_titles['strict match']
+        regex_match = row_titles['regex match']
+        terminate_on_mismatch = row_titles['terminate on mismatch']
 
-        elif isinstance(row_titles, str) or isinstance(row_titles, unicode):
-            if len(row_content) <= 1:
-                table_title = None
-                continue
-            second_cell_text = row_content[1]['text']
-            if not re.match(row_titles, second_cell_text):
-                table_title = None
-                continue
-            category, race_id = tokenize(row_content[2]['link'])
-            result[table_title][race_id] = row_content[1:]
+        matched = False
+        if len(row_content) > column_index + 1:
+            candidate_row_title = row_content[column_index]['text']
+            for s in strict_match:
+                if s == candidate_row_title:
+                    matched = True
+                    result[table_title][s] = row_content[column_index + 1:]
+                    break
+            if not matched:
+                for s in regex_match:
+                    if re.match(s, candidate_row_title):
+                        matched = True
+                        category, race_id = tokenize(row_content[column_index + 1]['link'])
+                        result[table_title][race_id] = row_content[column_index:]
+                        break
+        if terminate_on_mismatch and not matched:
+            table_title = None
     return result
 
 

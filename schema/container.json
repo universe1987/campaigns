@@ -1,11 +1,17 @@
 {
 	"INCUMBENT":
-	[
-		"Party",
-		"Name",
-		"Won",
-		"Votes",
-		"Margin",
-		"Term"
-	]
+	{
+		"column index": 0,
+		"strict match":
+		[
+			"Party",
+			"Name",
+			"Won",
+			"Votes",
+			"Margin",
+			"Term"
+		],
+		"regex match": [],
+		"terminate on mismatch": false
+	}
 }
