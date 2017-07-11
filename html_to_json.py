@@ -19,8 +19,9 @@ def html_to_json(url):
         is_title_row = False
         row_content = []
         for td in tr.find_all('td'):
-            if td.find_all('img'):
-                continue
+            #if td.find_all('img'):
+            #    if "(" not in td.find_all():
+            #        continue
             text = clean_up(td.text)
             if text in template:
                 table_title = text
