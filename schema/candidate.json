@@ -16,14 +16,16 @@
 			"Info"
 		],
 		"regex match": [],
-		"terminate on mismatch": false
+		"terminate on mismatch": false,
+		"ignore image": true
 	},
  	"RACES":
 	{
 		"column index": 1,
 		"strict match": [],
 		"regex match": ["\\d{2}/\\d{2}/\\d{4}"],
-		"terminate on mismatch": true
+		"terminate on mismatch": true,
+		"ignore image": true
 	}
 }
  

@@ -15,17 +15,22 @@ def html_to_json(url):
 
     table_title = None
     result = {}
+    ignore_image = True
     for tr in soup.find_all('tr'):
+        # keep only the most bottom level tr
+        if tr.find_all('tr'):
+            continue
         is_title_row = False
         row_content = []
         for td in tr.find_all('td'):
-            if td.find_all('img'):
+            if ignore_image and td.find_all('img'):
                 continue
             text = clean_up(td.text)
             if text in template:
                 table_title = text
                 is_title_row = True
                 row_titles = template[table_title]
+                ignore_image = row_titles['ignore image']
                 result[table_title] = {}
                 break
             link = ''
@@ -48,7 +53,7 @@ def html_to_json(url):
         if len(row_content) > column_index + 1:
             candidate_row_title = row_content[column_index]['text']
             for s in strict_match:
-                if s == candidate_row_title:
+                if s == candidate_row_title and s not in result[table_title]:
                     matched = True
                     result[table_title][s] = row_content[column_index + 1:]
                     break
@@ -61,13 +66,17 @@ def html_to_json(url):
                         break
         if terminate_on_mismatch and not matched:
             table_title = None
+            ignore_image = True
     return result
 
 
 if __name__ == '__main__':
     urls = ['http://www.ourcampaigns.com/RaceDetail.html?RaceID=613722',
             'http://www.ourcampaigns.com/CandidateDetail.html?CandidateID=234785',
-            'http://www.ourcampaigns.com/ContainerDetail.html?ContainerID=131']
+            'http://www.ourcampaigns.com/ContainerDetail.html?ContainerID=131',
+            'http://www.ourcampaigns.com/RaceDetail.html?RaceID=548556',
+            'http://www.ourcampaigns.com/RaceDetail.html?RaceID=370463',
+            'http://www.ourcampaigns.com/RaceDetail.html?RaceID=486821']
 
     for i, url in enumerate(urls):
         result = html_to_json(url)

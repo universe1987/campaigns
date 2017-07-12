@@ -12,6 +12,7 @@
 			"Term"
 		],
 		"regex match": [],
-		"terminate on mismatch": false
+		"terminate on mismatch": false,
+		"ignore image": true
 	}
 }
