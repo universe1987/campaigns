@@ -18,7 +18,8 @@
 			"Data Sources"
 		],
 		"regex match": [],
-		"terminate on mismatch": false
+		"terminate on mismatch": false,
+		"ignore image": true
 	},
 	"LAST GENERAL ELECTION":
 	{
@@ -33,14 +34,16 @@
 			"Margin"
 		],
 		"regex match": [],
-		"terminate on mismatch": false
+		"terminate on mismatch": false,
+		"ignore image": true
 	},
 	"PRIMARY/OTHER SCHEDULE":
 	{
 		"column index": 0,
 		"strict match": [],
 		"regex match": [".*\\d{2}, \\d{4}"],
-		"terminate on mismatch": true
+		"terminate on mismatch": true,
+		"ignore image": false
 	},
 	"CANDIDATES":
 	{
@@ -58,6 +61,7 @@
 			"Entry Date"
 		],
 		"regex match": [],
-		"terminate on mismatch": false
+		"terminate on mismatch": false,
+		"ignore image": true
 	}
 }
