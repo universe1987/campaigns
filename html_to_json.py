@@ -82,6 +82,12 @@ if __name__ == '__main__':
 
     for i, url in enumerate(urls):
         result = html_to_json(url)
-        saveas = 'converted_{}.json'.format(i)
-        with open(saveas, 'wb') as fp:
-            json.dump(result, fp)
+        reference = 'test/ref_{}.json'.format(i)
+        with open(reference, 'rb') as fp:
+            ref = fp.read()
+        s = json.dumps(result)
+        if s != ref:
+            print i, 'failed'
+            break
+    else:
+        print 'pass'
