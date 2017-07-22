@@ -30,7 +30,7 @@ def get_html(url, max_retry=5):
             if retry_count > max_retry:
                 return None
             try:
-                resp = requests.get(url)
+                resp = requests.get(url + '&ShowAllCand=Y')
             except Exception as e:
                 print e
                 continue

@@ -31,7 +31,8 @@ def html_to_json(url):
                 is_title_row = True
                 row_titles = template[table_title]
                 ignore_image = row_titles['ignore image']
-                result[table_title] = {}
+                if table_title not in result:
+                    result[table_title] = {}
                 break
             link = ''
             for a in td.find_all('a'):
@@ -45,19 +46,20 @@ def html_to_json(url):
             continue
 
         column_index = row_titles['column index']
-        strict_match = row_titles['strict match']
+        strict_match = set(row_titles['strict match'])
         regex_match = row_titles['regex match']
         terminate_on_mismatch = row_titles['terminate on mismatch']
 
         matched = False
         if len(row_content) > column_index + 1:
             candidate_row_title = row_content[column_index]['text']
-            for s in strict_match:
-                if s == candidate_row_title and s not in result[table_title]:
-                    matched = True
-                    result[table_title][s] = row_content[column_index + 1:]
-                    break
-            if not matched:
+            if candidate_row_title in strict_match:
+                matched = True
+                if candidate_row_title not in result[table_title]:
+                    result[table_title][candidate_row_title] = row_content[column_index + 1:]
+                else:
+                    result[table_title][candidate_row_title].extend(row_content[column_index + 1:])
+            else:
                 for s in regex_match:
                     if re.match(s, candidate_row_title):
                         matched = True
