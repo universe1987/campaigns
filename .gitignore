@@ -3,3 +3,4 @@ cache/
 data/
 *.pyc
 *.txt
+.DS_Store
