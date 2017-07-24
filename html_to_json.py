@@ -62,14 +62,13 @@ def html_to_json(url):
                     result[table_title][candidate_row_title].extend(row_content[column_index + 1:])
             else:
                 for s in regex_match:
-                    if s in candidate_row_title:
-                        matched = True
-                        result[table_title][u'Certified Votes'] = row_content[column_index + 1:]
-                        break
                     if re.match(s, candidate_row_title):
                         matched = True
                         if has_row_title:
-                            result[table_title][candidate_row_title] = row_content[column_index + 1:]
+                            if candidate_row_title not in result[table_title]:
+                                result[table_title][candidate_row_title] = row_content[column_index + 1:]
+                            else:
+                                result[table_title][candidate_row_title].extend(row_content[column_index + 1:])
                         else:
                             category, race_id = tokenize(row_content[column_index + 1]['link'])
                             result[table_title][race_id] = row_content[column_index:]

@@ -34,7 +34,7 @@
 			"Margin"
 		],
 		"regex match": [],
-		"terminate on mismatch": false,
+		"terminate on mismatch": true,
 		"ignore image": true
 	},
 	"PRIMARY/OTHER SCHEDULE":
@@ -54,14 +54,31 @@
 			"Photo",
 			"Name",
 			"Party",
-			"Certified Votes",
 			"Margin",
 			"Predict Avg.",
 			"Cash On Hand",
 			"Website",
 			"Entry Date"
 		],
-		"regex match": ["ertified Votes"],
+		"regex match": [".*ertified Votes"],
+		"terminate on mismatch": false,
+		"ignore image": false
+	},
+	"MORE CANDIDATES":
+	{
+		"column index": 0,
+		"strict match":
+		[
+			"Photo",
+			"Name",
+			"Party",
+			"Margin",
+			"Predict Avg.",
+			"Cash On Hand",
+			"Website",
+			"Entry Date"
+		],
+		"regex match": [".*ertified Votes"],
 		"terminate on mismatch": false,
 		"ignore image": false
 	}
