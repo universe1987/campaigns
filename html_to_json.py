@@ -49,6 +49,7 @@ def html_to_json(url):
         strict_match = set(row_titles['strict match'])
         regex_match = row_titles['regex match']
         terminate_on_mismatch = row_titles['terminate on mismatch']
+        has_row_title = row_titles.get('has row title', True)
 
         matched = False
         if len(row_content) > column_index + 1:
@@ -63,8 +64,11 @@ def html_to_json(url):
                 for s in regex_match:
                     if re.match(s, candidate_row_title):
                         matched = True
-                        category, race_id = tokenize(row_content[column_index + 1]['link'])
-                        result[table_title][race_id] = row_content[column_index:]
+                        if has_row_title:
+                            result[table_title][candidate_row_title] = row_content[column_index + 1:]
+                        else:
+                            category, race_id = tokenize(row_content[column_index + 1]['link'])
+                            result[table_title][race_id] = row_content[column_index:]
                         break
         if terminate_on_mismatch and not matched:
             table_title = None
@@ -72,7 +76,7 @@ def html_to_json(url):
     return result
 
 
-if __name__ == '__main__':
+def test():
     urls = ['http://www.ourcampaigns.com/RaceDetail.html?RaceID=613722',
             'http://www.ourcampaigns.com/CandidateDetail.html?CandidateID=234785',
             'http://www.ourcampaigns.com/ContainerDetail.html?ContainerID=131',
@@ -88,6 +92,16 @@ if __name__ == '__main__':
         s = json.dumps(result)
         if s != ref:
             print i, 'failed'
+            with open('check.json', 'wb') as fp:
+                fp.write(s)
             break
     else:
         print 'pass'
+
+
+if __name__ == '__main__':
+    test()
+    # url = 'http://www.ourcampaigns.com/RaceDetail.html?RaceID=291964'
+    # result = html_to_json(url)
+    # with open('ref_6.json', 'wb') as fp:
+    #     json.dump(result, fp)

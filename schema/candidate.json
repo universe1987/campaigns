@@ -25,6 +25,7 @@
 		"strict match": [],
 		"regex match": ["\\d{2}/\\d{2}/\\d{4}"],
 		"terminate on mismatch": true,
+		"has row title": false,
 		"ignore image": true
 	}
 }
