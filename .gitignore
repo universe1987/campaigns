@@ -4,3 +4,5 @@ data/
 *.pyc
 *.txt
 .DS_Store
+*ipynb*
+src/transform/key_race_details.csv

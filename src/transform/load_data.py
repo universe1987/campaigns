@@ -79,7 +79,9 @@ def generate_candidatetable():
     df = df[df['Name'] != '']
     df['CandidateID'] = df['Name link'].str.extract('(\d+)', expand=False)
     df['PartyID'] = df['Party link'].str.extract('(\d+)', expand=False)
-    df['Votes'], df['Share'] = df['Votes'].str.extract('(\d+,?\d*) \((\d+\.\d*)%\)', expand=False)
+    votes_share_df = df['Votes'].str.extract('(?P<votes>\d+,?\d*) \((?P<share>\d+\.?\d*)%\)', expand=False)
+    df['Votes'] = votes_share_df['votes']
+    df['Share'] = votes_share_df['share']
     to_drop = ['Contributor link', 'Filing Deadline', 'Filing Deadline link', 'Last Modified', 'Last Modified link',
                'Office link', 'Parents link', 'Polls Close link', 'Polls Open', 'Polls Open link', 'Term End link',
                'Term Start link', 'Turnout link', 'Type link']
