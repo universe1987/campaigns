@@ -74,7 +74,7 @@ def generate_race_details_table():
     return df
 
 
-def generate_candidatetable():
+def generate_candidate_table():
     df = select_tables('../../data/json', 'Governor', 'Candidates')
     df = df[df['Name'] != '']
     df['CandidateID'] = df['Name link'].str.extract('(\d+)', expand=False)
@@ -82,62 +82,9 @@ def generate_candidatetable():
     votes_share_df = df['Votes'].str.extract('(?P<votes>\d+,?\d*) \((?P<share>\d+\.?\d*)%\)', expand=False)
     df['Votes'] = votes_share_df['votes']
     df['Share'] = votes_share_df['share']
-    to_drop = ['Contributor link', 'Filing Deadline', 'Filing Deadline link', 'Last Modified', 'Last Modified link',
-               'Office link', 'Parents link', 'Polls Close link', 'Polls Open', 'Polls Open link', 'Term End link',
-               'Term Start link', 'Turnout link', 'Type link']
+    to_drop = ["Votes link", "Photo", "Entry Date", "Margin", "Predict Avg.",
+               "Cash On Hand", "Name", "Website link", 'Candidate link', 'Party link']
     df.drop(to_drop, axis=1, inplace=True)
-    return df
-
-
-def clean_null(df, cols, null_words):
-    # To remove rows if a certain column contains elements in the list of null words
-    # df is a loaded csv file, i.e. df = pd.read_csv(file.csv)
-    print 'Before clean_null:', len(df['Name'])
-    for x in null_words:
-        df = df[df[cols] != x]
-    print 'After clean_null:', len(df['Name'])
-    return df
-
-
-
-def split_votes_share(df, dic):
-    for key, value in dic.iteritems():
-        df[value[0]], df[value[1]] = df[key].str.split("(").str
-        df[value[0]] = df[value[0]].apply(keep_ascii)
-        df[value[1]], df['temp'] = df[value[1]].str.split("%").str
-        df = df.drop('temp', 1)
-    return df
-
-
-def setup_race_details2():
-    start = time.time()
-    df = pd.read_csv('key_race_details2.csv')
-    df = clean_null(df, 'Name', ["{u'text': u'', u'link': u''}"])
-
-    dics = {'Name': ['Names', 'CandID'],
-            'Final Votes': ['Votes_Share', 'v1'],
-            'Party': ['Partys', 'PartyID'],
-            'Website': ['v2', 'Web']}
-    df = split_two(df, dics)
-
-    list = ['CandID', 'PartyID']
-    for x in list:
-        df[x] = df[x].str.extract('(\d+)', expand=False)
-
-    dics = {'Votes_Share': ['Votes', 'Share']}
-    df = split_votes_share(df, dics)
-
-    list = ["Votes_Share", "Photo", "Entry Date", "Margin", "Predict Avg.",
-            "Cash On Hand", "Name", "Final Votes", "Party", "Website", "v1", "v2"]
-    df = df.drop(list, 1)
-
-    dic = {'Names': 'Name', 'Partys': 'Party'}
-    for key, value in dic.iteritems():
-        df = df.rename(columns={key: value})
-
-    print df.head(13)
-    end = time.time()
-    print ("Race Details 2 is finished", end - start, 'elapsed')
     return df
 
 
