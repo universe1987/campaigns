@@ -44,11 +44,11 @@ def crawl(url):
             name = campactify(result['INCUMBENT']['Name'][0]['text'])
             year = result['INCUMBENT']['Won'][0]['text'].split('/')[-1].strip()
             description = 'container_{}_{}'.format(name, year)
-        # print '    ' + description, current_url
+
         for table_title, table in result.iteritems():
             camel_title = to_camel(table_title)
             if camel_title not in ['LastGeneralElection', 'PrimaryOtherSchedule']:
-                with open('data/{}_{}_{}.json'.format(description, uid, camel_title), 'wb') as fp:
+                with open('../../data/json/{}_{}_{}.json'.format(description, uid, camel_title), 'wb') as fp:
                     json.dump(table, fp)
             if category == 'race' and 'Governor' not in description:
                 continue
@@ -64,11 +64,11 @@ def crawl(url):
 
 if __name__ == '__main__':
     # create a folder for cache
-    if not os.path.exists('cache'):
-        os.mkdir('cache')
+    if not os.path.exists('../../data/html'):
+        os.mkdir('../../data/html')
     # create a folder for extracted data
-    if not os.path.exists('data'):
-        os.mkdir('data')
+    if not os.path.exists('../../data/json'):
+        os.mkdir('../../data/json')
     with open('processed.txt', 'wb') as fp:
         pass
     url_template = 'ContainerDetail.html?ContainerID={}'

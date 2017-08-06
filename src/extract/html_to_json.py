@@ -1,7 +1,7 @@
 import re
 import json
 from bs4 import BeautifulSoup
-from utils import clean_up, get_html, tokenize
+from utils import keep_ascii, get_html, tokenize
 
 
 def html_to_json(url):
@@ -25,7 +25,7 @@ def html_to_json(url):
         for td in tr.find_all('td'):
             if ignore_image and td.find_all('img'):
                 continue
-            text = clean_up(td.text)
+            text = keep_ascii(td.text)
             if text in template:
                 table_title = text
                 is_title_row = True
@@ -89,7 +89,7 @@ def test():
 
     for i, url in enumerate(urls):
         result = html_to_json(url)
-        reference = 'test/ref_{}.json'.format(i)
+        reference = 'unit_test/ref_{}.json'.format(i)
         with open(reference, 'rb') as fp:
             ref = fp.read()
         s = json.dumps(result)

@@ -6,7 +6,7 @@ from time import sleep
 valid = set(string.letters + '-')
 
 
-def clean_up(s):
+def keep_ascii(s):
     ascii_part = [c for c in s if ord(c) < 128]
     x = ''.join(ascii_part).strip()
     return ' '.join(x.split())
@@ -22,7 +22,7 @@ def tokenize(url):
 def get_html(url, max_retry=5):
     category, uid = tokenize(url)
     name = '{}_{}'.format(category, uid)
-    local_cache = 'cache/{}.html'.format(name)
+    local_cache = '../../data/html/{}.html'.format(name)
     if not os.path.exists(local_cache):
         retry_count = 0
         while True:
