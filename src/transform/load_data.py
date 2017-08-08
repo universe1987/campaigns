@@ -1,6 +1,5 @@
 import re
 import json
-import time
 import pandas as pd
 from glob import glob
 
@@ -64,12 +63,11 @@ def generate_race_details_table():
     df['Position'] = df['Parents'].str.split('>').str[3].str.strip()
     df['Term Length'] = df['Term End'] - df['Term Start']
     df['ContributorID'] = df['Contributor link'].str.extract('(\d+)', expand=False)
-    df['Source'] = df['Source'].str.replace('\[Link\]', "")
-    df['Term Length'] = df['Term End Year'] - df['Term Start Year']
+    df['Data Sources'] = df['Data Sources'].str.replace('\[Link\]', "")
     df['Turnout'] = df['Turnout'].str.extract('(\d+\.?\d*)% Total Population', expand=False).astype(float)
     to_drop = ['Contributor link', 'Filing Deadline', 'Filing Deadline link', 'Last Modified', 'Last Modified link',
                'Office link', 'Parents link', 'Polls Close link', 'Polls Open', 'Polls Open link', 'Term End link',
-               'Term Start link', 'Turnout link', 'Type link']
+               'Term Start link', 'Turnout link', 'Type link', 'Data Sources link']
     df.drop(to_drop, axis=1, inplace=True)
     return df
 
@@ -82,8 +80,9 @@ def generate_candidate_table():
     votes_share_df = df['Votes'].str.extract('(?P<votes>\d+,?\d*) \((?P<share>\d+\.?\d*)%\)', expand=False)
     df['Votes'] = votes_share_df['votes']
     df['Share'] = votes_share_df['share']
-    to_drop = ["Votes link", "Photo", "Entry Date", "Margin", "Predict Avg.",
-               "Cash On Hand", "Name", "Website link", 'Candidate link', 'Party link']
+    to_drop = ["Votes link", "Photo", "Entry Date", "Margin", "Predict Avg.", "Predict Avg. link", "Margin link",
+               "Entry Date link", "Cash On Hand", "Cash On Hand link", "Name", "Website link", 'Name link',
+               'Party link']
     df.drop(to_drop, axis=1, inplace=True)
     return df
 
