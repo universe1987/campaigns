@@ -1,7 +1,12 @@
+import os
 import re
+import sys
 import json
 from bs4 import BeautifulSoup
-from utils import keep_ascii, get_html, tokenize
+from crawler_utils import get_html
+from crawler_utils import tokenize
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from utils.keep_ascii import keep_ascii
 
 
 def html_to_json(url):

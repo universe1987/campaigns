@@ -6,10 +6,8 @@ from time import sleep
 valid = set(string.letters + '-')
 
 
-def keep_ascii(s):
-    ascii_part = [c for c in s if ord(c) < 128]
-    x = ''.join(ascii_part).strip()
-    return ' '.join(x.split())
+def campactify(s):
+    return ''.join([x for x in s if x in valid])
 
 
 def tokenize(url):
@@ -50,10 +48,6 @@ def is_valid_url(url):
         return False
     category, uid = tokenize(url)
     return category in ['race', 'candidate']
-
-
-def campactify(s):
-    return ''.join([x for x in s if x in valid])
 
 
 def to_camel(s):

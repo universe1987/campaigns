@@ -1,11 +1,11 @@
 import os
-import json
 import csv
+import json
 from collections import deque
-from utils import to_camel
-from utils import campactify
-from utils import tokenize
-from utils import is_valid_url
+from crawler_utils import campactify
+from crawler_utils import is_valid_url
+from crawler_utils import tokenize
+from crawler_utils import to_camel
 from html_to_json import html_to_json
 
 
