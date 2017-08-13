@@ -3,6 +3,10 @@ import string
 import requests
 from time import sleep
 
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from config import HTML_DIR
+
 valid = set(string.letters + '-')
 
 
@@ -10,17 +14,9 @@ def campactify(s):
     return ''.join([x for x in s if x in valid])
 
 
-def tokenize(url):
-    info = url.split('?')[-1].split('=')
-    category = info[0][:-2].lower()
-    uid = info[1]
-    return category, uid
-
-
 def get_html(url, max_retry=5):
     category, uid = tokenize(url)
-    name = '{}_{}'.format(category, uid)
-    local_cache = '../../data/html/{}.html'.format(name)
+    local_cache = os.path.join(HTML_DIR, '{}_{}.html'.format(category, uid))
     if not os.path.exists(local_cache):
         retry_count = 0
         while True:
@@ -48,6 +44,19 @@ def is_valid_url(url):
         return False
     category, uid = tokenize(url)
     return category in ['race', 'candidate']
+
+
+def keep_ascii(s):
+    ascii_part = [c for c in s if ord(c) < 128]
+    x = ''.join(ascii_part).strip()
+    return ' '.join(x.split())
+
+
+def tokenize(url):
+    info = url.split('?')[-1].split('=')
+    category = info[0][:-2].lower()
+    uid = info[1]
+    return category, uid
 
 
 def to_camel(s):

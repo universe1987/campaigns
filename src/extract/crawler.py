@@ -1,24 +1,24 @@
 import os
-import csv
 import json
 from collections import deque
-from crawler_utils import campactify
-from crawler_utils import is_valid_url
-from crawler_utils import tokenize
-from crawler_utils import to_camel
+from utils import campactify
+from utils import is_valid_url
+from utils import tokenize
+from utils import to_camel
 from html_to_json import html_to_json
+
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from config import JSON_DIR, ENTRY_DIR
 
 
 def crawl(url):
     q = deque([url])
-    with open('processed.txt', 'rb') as fp:
-        processed = set(fp.read().split())
-    processed.add(url)
+    processed = {url}
     domain = 'http://www.ourcampaigns.com/'
+
     while q:
         current_url = q.popleft()
-        if current_url.startswith(domain):
-            current_url = current_url[len(domain):]
         result = html_to_json(domain + current_url)
         if result is None:
             print '  skip', current_url
@@ -48,34 +48,35 @@ def crawl(url):
         for table_title, table in result.iteritems():
             camel_title = to_camel(table_title)
             if camel_title not in ['LastGeneralElection', 'PrimaryOtherSchedule']:
-                with open('../../data/json/{}_{}_{}.json'.format(description, uid, camel_title), 'wb') as fp:
+                with open(os.path.join(JSON_DIR, '{}_{}_{}.json'.format(description, uid, camel_title)), 'wb') as fp:
                     json.dump(table, fp)
-            if category == 'race' and 'Governor' not in description:
+            if category == 'race' and 'Governor' not in description and 'Mayor' not in description:
                 continue
             for row_title, row in table.iteritems():
                 for cell in row:
                     link = cell['link']
-                    if is_valid_url(link) and link not in processed:
+                    if link not in processed and is_valid_url(link):
                         q.append(link)
                         processed.add(link)
-    with open('processed.txt', 'wb') as fp:
-        fp.write('\n'.join(processed))
+
+
+def crawl_state():
+    with open(os.path.join(ENTRY_DIR, 'recent_elections_state.csv'), 'rb') as fp:
+        data = fp.read().split('\n')
+    for row in data:
+        url, state = row.split(',')[:2]
+        print 'Crawling', state
+        crawl(url)
+
+
+def crawl_city():
+    with open(os.path.join(ENTRY_DIR, 'recent_elections_city.csv'), 'rb') as fp:
+        data = fp.read().split('\n')
+    for row in data:
+        url, city, state = row.split(',')[:3]
+        print 'Crawling', city, state
+        crawl(url)
 
 
 if __name__ == '__main__':
-    # create a folder for cache
-    if not os.path.exists('../../data/html'):
-        os.mkdir('../../data/html')
-    # create a folder for extracted data
-    if not os.path.exists('../../data/json'):
-        os.mkdir('../../data/json')
-    with open('processed.txt', 'wb') as fp:
-        pass
-    url_template = 'ContainerDetail.html?ContainerID={}'
-    with open('governor.csv', 'rb') as fp:
-        reader = csv.reader(fp, delimiter=',')
-        for row in reader:
-            container_id, state, year = row[:3]
-            print 'Crawling', state
-            url = url_template.format(container_id)
-            crawl(url)
+    crawl_city()

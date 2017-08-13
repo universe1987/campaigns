@@ -1,12 +1,14 @@
-import os
 import re
-import sys
 import json
 import pandas as pd
 from glob import glob
+from utils import keep_ascii
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils.keep_ascii import keep_ascii
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from config import JSON_DIR, ENTRY_DIR
 
 
 # Merge Race Details
@@ -53,8 +55,8 @@ def select_tables(folder, office, table_title):
     return df
 
 
-def generate_race_details_table2():
-    df = select_tables('../../data/json', 'Governor', 'RaceDetails')
+def generate_race_details_table():
+    df = select_tables(JSON_DIR, 'Governor', 'RaceDetails')
     date_cols = ['Polls Close', 'Term Start', 'Term End']
     for column_title in date_cols:
         df[column_title] = pd.to_datetime(df[column_title].str.split('-').str[0], errors='coerce')
@@ -77,7 +79,7 @@ def generate_race_details_table2():
 
 
 def generate_candidate_table():
-    df = select_tables('../../data/json', 'Governor', 'Candidates')
+    df = select_tables(JSON_DIR, 'Governor', 'Candidates')
     df = df[df['Name'] != '']
     df['CandidateID'] = df['Name link'].str.extract('(\d+)', expand=False)
     df['PartyID'] = df['Party link'].str.extract('(\d+)', expand=False)
@@ -91,30 +93,9 @@ def generate_candidate_table():
     return df
 
 
-def check_share_sum(df):
-    df_sum = df.groupby(['RaceID'])['Share'].sum().reset_index()
-    bad_rows = df_sum[abs(df_sum['Share'] - 100) >= .1]
-    if len(bad_rows) == 0:
-        print 'no bad rows'
-    else:
-        print 'bad rows:'
-        print bad_rows
-
-
-def fix_bad_share(df):
-    epsilon = 1e-10
-    df['Share'] += epsilon
-    df_sum = df.groupby(['RaceID'])['Share'].sum().reset_index()
-    df_sum.rename(columns={'Share': 'Total'}, inplace=True)
-    df_m = df.merge(df_sum, left_on='RaceID', right_on='RaceID')
-    df_m['Share'] = 100 * df_m['Share'] / df_m['Total']
-    df_m.drop(['Total'], axis=1, inplace=True)
-    return df_m
-
-
 def merge_city(df):
     names = ['web', 'city', 'state', 'partisan', 'note']
-    df_city = pd.read_csv('../../data/input/recent_elections_city.csv', header=None, names=names)
+    df_city = pd.read_csv(os.path.join(ENTRY_DIR, 'recent_elections_city.csv'), header=None, names=names)
     df_city['CityID'] = range(len(df_city))
     df_city.drop('note', axis=1, inplace=True)
     df_city['RaceID'] = df_city['web'].str.extract('(\d+)', expand=False)
@@ -123,7 +104,22 @@ def merge_city(df):
 
 def merge_state(df):
     names = ['ContainerID', 'State', 'year', 'note']
-    df_state = pd.read_csv('../../data/input/recent_elections_state.csv', header=None, names=names)
+    df_state = pd.read_csv(os.path.join(ENTRY_DIR, 'recent_elections_state.csv'), header=None, names=names)
     df_state['StateID'] = range(len(df_state))
     df_state.drop('note', axis=1, inplace=True)
     return df.merge(df_state, left_on='State', right_on='State')
+
+
+if __name__ == '__main__':
+    from StopWatch import StopWatch
+    from utils import check_share_sum, fix_bad_share
+    sw = StopWatch()
+    df1 = generate_race_details_table()
+    sw.tic('generate race details table')
+    df2 = generate_candidate_table()
+    sw.tic('generate candidate table')
+    print 'before'
+    check_share_sum(df2)
+    df_m = fix_bad_share(df2)
+    print 'after'
+    check_share_sum(df_m)
