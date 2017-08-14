@@ -47,7 +47,6 @@ def crawl(url_list):
             year = result['INCUMBENT']['Won'][0]['text'].split('/')[-1].strip()
             description = 'container_{}_{}'.format(name, year)
 
-        print description
         count += 1
         if count % 500 == 0:
             print '{}, crawling {}'.format(count, description)
@@ -81,5 +80,5 @@ def crawl_city():
 
 
 if __name__ == '__main__':
+    crawl_state()
     crawl_city()
-    # crawl_state()
