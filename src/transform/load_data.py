@@ -55,8 +55,8 @@ def select_tables(folder, office, table_title):
     return df
 
 
-def generate_race_details_table():
-    df = select_tables(JSON_DIR, 'Governor', 'RaceDetails')
+def generate_race_details_table(position):
+    df = select_tables(JSON_DIR, position, 'RaceDetails')
     date_cols = ['Polls Close', 'Term Start', 'Term End']
     for column_title in date_cols:
         df[column_title] = pd.to_datetime(df[column_title].str.split('-').str[0], errors='coerce')
@@ -66,7 +66,9 @@ def generate_race_details_table():
         k = df['State'][i]
         if k in lookup:
             df.loc[i, 'State'] = lookup[k]
-    df['Position'] = df['Parents'].str.split('>').str[3].str.strip()
+    if position == 'Mayor':
+        df['City'] = df['Parents'].str.split('>').str[-2].str.strip()
+    df['Position'] = df['Parents'].str.split('>').str[-1].str.strip()
     df['Term Length'] = df['Term End'] - df['Term Start']
     df['ContributorID'] = df['Contributor link'].str.extract('(\d+)', expand=False)
     df['Data Sources'] = df['Data Sources'].str.replace('\[Link\]', "")
@@ -78,8 +80,8 @@ def generate_race_details_table():
     return df
 
 
-def generate_candidate_table():
-    df = select_tables(JSON_DIR, 'Governor', 'Candidates')
+def generate_candidate_table(position):
+    df = select_tables(JSON_DIR, position, 'Candidates')
     df = df[df['Name'] != '']
     df['CandidateID'] = df['Name link'].str.extract('(\d+)', expand=False)
     df['PartyID'] = df['Party link'].str.extract('(\d+)', expand=False)
@@ -114,9 +116,11 @@ if __name__ == '__main__':
     from StopWatch import StopWatch
     from utils import check_share_sum, fix_bad_share
     sw = StopWatch()
-    df1 = generate_race_details_table()
+    df1 = generate_race_details_table(position='Mayor')
+    print df1.shape
     sw.tic('generate race details table')
-    df2 = generate_candidate_table()
+    df2 = generate_candidate_table(position='Mayor')
+    print df2.shape
     sw.tic('generate candidate table')
     print 'before'
     check_share_sum(df2)

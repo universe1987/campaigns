@@ -6,7 +6,7 @@ class StopWatch(object):
         self.clock = time()
 
     def tic(self, msg):
-        print '{}: {:0.2f} seconds'.format(msg, time() - self.clock)
+        print '{} takes {:0.2f} seconds'.format(msg, time() - self.clock)
         self.clock = time()
 
     def reset(self):
