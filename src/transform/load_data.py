@@ -61,11 +61,7 @@ def generate_race_details_table(position):
     for column_title in date_cols:
         df[column_title] = pd.to_datetime(df[column_title].str.split('-').str[0], errors='coerce')
     df['State'] = df['Parents'].str.split('>').str[2].str.strip()
-    lookup = {"Hawai'i": "Hawaii", "Territory of Alaska": "Alaska", "Territory of Hawai'i": "Hawaii"}
-    for i in xrange(len(df)):
-        k = df['State'][i]
-        if k in lookup:
-            df.loc[i, 'State'] = lookup[k]
+    adjust_name(df, 'State', {"Hawai'i": "Hawaii", "Territory of Alaska": "Alaska", "Territory of Hawai'i": "Hawaii"})
     if position == 'Mayor':
         df['City'] = df['Parents'].str.split('>').str[-2].str.strip()
     df['Position'] = df['Parents'].str.split('>').str[-1].str.strip()
@@ -95,13 +91,26 @@ def generate_candidate_table(position):
     return df
 
 
+def adjust_name(df, column_name, lookup):
+    for i in xrange(len(df)):
+        k = df[column_name][i]
+        if k in lookup:
+            df.loc[i, column_name] = lookup[k]
+
+
 def merge_city(df):
-    names = ['web', 'city', 'state', 'partisan', 'note']
+    names = ['url', 'city_name', 'state', 'partisan', 'note']
     df_city = pd.read_csv(os.path.join(ENTRY_DIR, 'recent_elections_city.csv'), header=None, names=names)
     df_city['CityID'] = range(len(df_city))
     df_city.drop('note', axis=1, inplace=True)
-    df_city['RaceID'] = df_city['web'].str.extract('(\d+)', expand=False)
-    return df.merge(df_city, left_on='RaceID', right_on='RaceID')
+    df_city['RaceID'] = df_city['url'].str.extract('(\d+)', expand=False)
+
+    city_name_lookup = {}
+    city_name_correspondence = pd.merge(df[['City', 'RaceID']], df_city[['city_name', 'RaceID']])
+    for row in city_name_correspondence[['City', 'city_name']]:
+        city_name_lookup[row[0]] = row[1]
+    adjust_name(df, 'City', city_name_lookup)
+    return df.merge(df_city[['city_name', 'CityID']], left_on='City', right_on='city_name')
 
 
 def merge_state(df):
@@ -115,6 +124,7 @@ def merge_state(df):
 if __name__ == '__main__':
     from StopWatch import StopWatch
     from utils import check_share_sum, fix_bad_share
+
     sw = StopWatch()
     df1 = generate_race_details_table(position='Mayor')
     print df1.shape
