@@ -80,5 +80,5 @@ def crawl_city():
 
 
 if __name__ == '__main__':
-    crawl_state()
+    # crawl_state()
     crawl_city()
