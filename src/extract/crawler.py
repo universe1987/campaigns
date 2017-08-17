@@ -8,6 +8,7 @@ from utils import to_camel
 from html_to_json import html_to_json
 
 import sys
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config import JSON_DIR, ENTRY_DIR
 from StopWatch import StopWatch
@@ -70,19 +71,20 @@ def crawl(url_list):
 def crawl_state():
     with open(os.path.join(ENTRY_DIR, 'recent_elections_state.csv'), 'rb') as fp:
         url_list = [row.split(',')[0] for row in fp.read().split('\n')]
-        url_list = ["ContainerDetail.html?ContainerID="+s for s in url_list]
-        print url_list
+        # url_list = ["ContainerDetail.html?ContainerID="+s for s in url_list]
+        # print url_list
     crawl(url_list)
+
 
 def crawl_city():
     with open(os.path.join(ENTRY_DIR, 'recent_elections_city.csv'), 'rb') as fp:
         url_list = [row.split(',')[0] for row in fp.read().split('\n')]
-        url_list = [s for s in url_list if s != 'none']
-        url_list = ['RaceDetail.html?RaceID='+filter(str.isdigit, str1) for str1 in url_list]
-        print url_list
+        # url_list = [s for s in url_list if s != 'none']
+        # url_list = ['RaceDetail.html?RaceID='+filter(str.isdigit, str1) for str1 in url_list]
+        # print url_list
     crawl(url_list)
+
 
 if __name__ == '__main__':
     crawl_city()
     crawl_state()
-
