@@ -82,9 +82,10 @@ def generate_candidate_table(position):
     df = df[df['Name'] != '']
     df['CandID'] = df['Name link'].str.extract('(\d+)', expand=False)
     df['PartyID'] = df['Party link'].str.extract('(\d+)', expand=False)
-    votes_share_df = df['Votes'].str.extract('(?P<votes>\d+,?\d*) \((?P<share>\d+\.?\d*)%\)', expand=False)
-    df['Votes'] = votes_share_df['votes'].str.replace(',', '').astype(float)
+    votes_share_df = df['Votes'].str.extract('(?P<votes>\d+,?\d*) \((?P<share>\d+\.?\d*)%\)', expand=False).fillna('-1')
+    df['Votes'] = votes_share_df['votes'].str.replace(',', '').astype(int)
     df['Share'] = votes_share_df['share'].astype(float)
+    df = df[df['Share'] >= 0]
     to_drop = ["Votes link", "Photo", "Entry Date", "Margin", "Predict Avg.", "Predict Avg. link", "Margin link",
                "Entry Date link", "Cash On Hand", "Cash On Hand link", "Website","Website link", 'Name link',
                'Party link']
