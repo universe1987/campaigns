@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 def race_details_recent(df_race, df_dist, distID, label):
     df_race_all = df_race.merge(df_dist, left_on=label, right_on=label, how='outer')
     df_race_distID = df_race_all.groupby([distID])['RaceID'].count().reset_index()
@@ -11,6 +13,23 @@ def race_details2_recent(df_non_writein, df_race_all, distID):
     df_all = df_non_writein.merge(df_race_all, left_on=['RaceID'], right_on=['RaceID'], how='outer')
     df_race2_distID = df_all.groupby([distID])['CandID'].count().reset_index()
     print df_race2_distID['CandID'].describe()
+    return df_all
+
+def term_start_merge(df_all, distID, cutoff):
+    df_sort = df_all
+    count = 0
+    while True:
+        df_sort = df_sort.sort_values([distID, 'Term Start'], ascending=True)
+        df_sort['Term Start Next'] = df_sort.groupby([distID])['Term Start'].shift(-1)
+        df_sort['Term Start Diff'] = df_sort['Term Start Next']-df_sort['Term Start']
+        df_sort.loc[(df_sort['Term Start Diff']<cutoff) & (df_sort['Term Start Diff']>timedelta(days=0)),'Term Start'] = df_sort['Term Start Next']
+        df_sort.loc[df_sort['Term Start Diff']<=timedelta(days=0),'Term Start Diff'] = cutoff+timedelta(days=2000)
+        s = df_sort['Term Start Diff'].min()
+        count = count + 1
+        print 's',s, count
+        if s > cutoff:
+            break
+    df_all = df_sort
     return df_all
 
 

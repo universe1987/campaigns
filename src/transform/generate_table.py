@@ -1,6 +1,6 @@
 import re
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 from glob import glob
 from utils import keep_ascii
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     from utils import check_share_sum, fix_bad_share
     from clean_data import terminal_election, early_dist, key_election, win_follow_ever, \
         incumbent_election_v1, incumbent_election_v2, career_span, first_win, \
-        winner_follower
+        winner_follower,term_start_merge
     from stat_data import select_dist, statistics_dist, statistics_election, statistics_candidates
     from df2tex import df2tex
 
@@ -158,6 +158,10 @@ if __name__ == '__main__':
 
     df_all = df_all[~df_all['Term End'].isnull()]
 
+    df_all = term_start_merge(df_all, distID, timedelta(days=120))
+    print 'Total->',df_all.groupby([distID])['Term Start'].nunique().reset_index().sum()
+
+
     df_all = terminal_election(df_all, distID)  # Terminal race per election period
     df_all = early_dist(df_all, distID)  # First documented race per city
 
@@ -177,33 +181,34 @@ if __name__ == '__main__':
     df_all = win_follow_ever(df_all)  # Indicator for if ever win/follow a race
     df_all = incumbent_election_v1(df_all, distID)  # If an incumbent exists
     df_all = incumbent_election_v2(df_all, distID)  # If an incumbent exists
+    print df_all['Incumbent2'].value_counts()
     df_all = career_span(df_all)  # Date for first try and last try
     df_all = first_win(df_all)  # Date for first winning
 
     # df_all.to_csv("../../data/df_race2_all.csv")
 
-    # df_all = select_dist(df_all, [[distID, 1000]], [['Term Start', datetime(1990, 1, 1)]])
-    # stat_dist = statistics_dist(df_race_all, distID)
-    # stat_election = statistics_election(df_all, distID)
+    df_all = select_dist(df_all, [[distID, 100]], [['Term Start', datetime(1950, 1, 1)]])
+    stat_dist = statistics_dist(df_all, distID)
+    stat_election = statistics_election(df_all, distID)
     stat_cand = statistics_candidates(df_all)
 
-    # row_name = [
-    #     ['stat_dist', 'N', 'N with Data', 'Avg Ranks (Unweighted)', 'Avg Ranks (Weighted by Periods)',
-    #      'Avg Election Periods', 'Avg Elections', 'Avg Term Lengths'],
-    #     ['stat_election', 'Elections Covered', 'Election Periods Covered', 'Incumbent Election Periods',
-    #      'Incumbent Election Candidates', 'Open Election Periods', 'Open Election Candidates',
-    #      'Unclear Election Periods', 'Unclear Election Candidates'],
-    #     ['stat_cand', 'Number of Unique Candidates', 'Number of Election Periods Per Candidate',
-    #      'Number of Candidates at least winning once', 'Number of Candidates never win',
-    #      'Winners: Number of Election Periods', 'Winners: Number of Winning Election Periods',
-    #      'Winners: Number of Failed Tries before First Win', 'Winners: Number of Tries After First Win',
-    #      'Winners: Number of Wins After First Win', 'Winners: Number of Fails After First Win',
-    #      'Losers: Number of Election Periods', ]
-    # ]
-    # for index, stats in enumerate([stat_dist, stat_election, stat_cand]):
-    #     row_head = row_name[index][0]
-    #     row_tail = row_name[index][1:]
-    #     df = pd.DataFrame({'Variable': stats.keys(), 'Value': stats.values()}).set_index('Variable', drop=False)
-    #     df = df.reindex(row_tail)
-    #     df2tex(df, '/Users/yuwang/Dropbox/local politicians/model/analysis_{}/'.format(lookup_office[distID]),
-    #            '{}.tex'.format(row_head), "%8.2f", 0, ['Value'], ['Variable'], ['Variable', 'Value'])
+    row_name = [
+        ['stat_dist', 'N', 'N with Data', 'Avg Ranks (Unweighted)', 'Avg Ranks (Weighted by Periods)',
+         'Avg Election Periods', 'Avg Elections', 'Avg Term Lengths'],
+        ['stat_election', 'Elections Covered', 'Election Periods Covered', 'Incumbent Election Periods',
+         'Incumbent Election Candidates', 'Open Election Periods', 'Open Election Candidates',
+         'Unclear Election Periods', 'Unclear Election Candidates'],
+        ['stat_cand', 'Number of Unique Candidates', 'Number of Election Periods Per Candidate',
+         'Number of Candidates at least winning once', 'Number of Candidates never win',
+         'Winners: Number of Election Periods', 'Winners: Number of Winning Election Periods',
+         'Winners: Number of Failed Tries before First Win', 'Winners: Number of Tries After First Win',
+         'Winners: Number of Wins After First Win', 'Winners: Number of Fails After First Win',
+         'Losers: Number of Election Periods', ]
+    ]
+    for index, stats in enumerate([stat_dist, stat_election, stat_cand]):
+        row_head = row_name[index][0]
+        row_tail = row_name[index][1:]
+        df = pd.DataFrame({'Variable': stats.keys(), 'Value': stats.values()}).set_index('Variable', drop=False)
+        df = df.reindex(row_tail)
+        df2tex(df, '/Users/yuwang/Dropbox/local politicians/model/analysis_{}/'.format(lookup_office[distID]),
+               '{}.tex'.format(row_head), "%8.2f", 0, ['Value'], ['Variable'], ['Variable', 'Value'])
