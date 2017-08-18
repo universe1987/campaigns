@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+
 def race_details_recent(df_race, df_dist, distID, label):
     df_race_all = df_race.merge(df_dist, left_on=label, right_on=label, how='outer')
     df_race_distID = df_race_all.groupby([distID])['RaceID'].count().reset_index()
@@ -15,18 +16,18 @@ def race_details2_recent(df_non_writein, df_race_all, distID):
     print df_race2_distID['CandID'].describe()
     return df_all
 
+
 def term_start_merge(df_all, distID, cutoff):
-    df_sort = df_all
+    df_sort = df_all.sort_values([distID, 'Term Start'], ascending=True)
     count = 0
     while True:
-        df_sort = df_sort.sort_values([distID, 'Term Start'], ascending=True)
         df_sort['Term Start Next'] = df_sort.groupby([distID])['Term Start'].shift(-1)
-        df_sort['Term Start Diff'] = df_sort['Term Start Next']-df_sort['Term Start']
-        df_sort.loc[(df_sort['Term Start Diff']<cutoff) & (df_sort['Term Start Diff']>timedelta(days=0)),'Term Start'] = df_sort['Term Start Next']
-        df_sort.loc[df_sort['Term Start Diff']<=timedelta(days=0),'Term Start Diff'] = cutoff+timedelta(days=2000)
+        df_sort['Term Start Diff'] = df_sort['Term Start Next'] - df_sort['Term Start']
+        df_sort.loc[df_sort['Term Start Diff'] < cutoff, 'Term Start'] = df_sort['Term Start Next']
+        df_sort.loc[df_sort['Term Start Diff'] <= timedelta(days=0), 'Term Start Diff'] = cutoff + timedelta(days=2000)
         s = df_sort['Term Start Diff'].min()
         count = count + 1
-        print 's',s, count
+        # print 's', s, count
         if s > cutoff:
             break
     df_all = df_sort
@@ -58,6 +59,7 @@ def winner_follower(df_all, df_in, distID, rank):  # rank='winner', rankID='winn
                           how='outer')
     df_all[rankID] = df_all[rank] * df_all['CandID'].astype(float)
     df_all.loc[df_all[rankID] == 0.0, rankID] = None
+    df_all[rank] = df_all[rank].astype(bool)
     return df_all
 
 

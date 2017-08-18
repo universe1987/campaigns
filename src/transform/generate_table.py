@@ -11,6 +11,12 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config import JSON_DIR, ENTRY_DIR
 
+from StopWatch import StopWatch
+from utils import check_share_sum, fix_bad_share
+from clean_data import *
+from stat_data import *
+from df2tex import df2tex
+
 
 # Merge Race Details
 def select_tables(folder, office, table_title):
@@ -126,31 +132,32 @@ def merge_state(df):
 
 
 if __name__ == '__main__':
-    from StopWatch import StopWatch
-    from utils import check_share_sum, fix_bad_share
-    from clean_data import terminal_election, early_dist, key_election, win_follow_ever, \
-        incumbent_election_v1, incumbent_election_v2, career_span, first_win, \
-        winner_follower,term_start_merge
-    from stat_data import select_dist, statistics_dist, statistics_election, statistics_candidates
-    from df2tex import df2tex
-
     lookup_office = {'CityID': 'Mayor', 'StateID': 'Governor'}
-    distID = 'StateID'
+    distID = 'CityID'
+    # distID = 'StateID'
 
     sw = StopWatch()
     df_race_details = generate_race_details_table(position=lookup_office[distID])
     sw.tic('generate race details table')
     df_candidate = generate_candidate_table(position=lookup_office[distID])
     sw.tic('generate candidate table')
-    check_share_sum(df_candidate)
+    # check_share_sum(df_candidate)
     df_m = fix_bad_share(df_candidate)
-    check_share_sum(df_m)
+    # check_share_sum(df_m)
 
     if distID == 'CityID':
         df_tmp = merge_city(df_race_details)
+        for s in ['Vice Mayor', 'Mayor Pro Tem']:
+            df_tmp = df_tmp[df_tmp['Position'] != s]
     else:
         df_tmp = merge_state(df_race_details)
-    df_all = df_tmp.merge(df_candidate, left_on="RaceID", right_on="RaceID")
+        df_tmp = df_tmp[df_tmp['Position'] == 'Governor']
+    print df_tmp.shape
+    df_tmp = df_tmp[df_tmp['Type'].str.contains('Election')]
+    print df_tmp.shape
+    df_tmp = df_tmp[df_tmp['Term End'] - df_tmp['Term Start'] > timedelta(days=360)]
+    print df_tmp.shape
+    df_all = df_tmp.merge(df_m, left_on="RaceID", right_on="RaceID")
 
     todrop = ['22593', '191', '19359', '30530', '4666', '4667']
     for x in todrop:
@@ -159,8 +166,7 @@ if __name__ == '__main__':
     df_all = df_all[~df_all['Term End'].isnull()]
 
     df_all = term_start_merge(df_all, distID, timedelta(days=120))
-    print 'Total->',df_all.groupby([distID])['Term Start'].nunique().reset_index().sum()
-
+    print 'Total->', df_all.groupby([distID])['Term Start'].nunique().reset_index().sum()
 
     df_all = terminal_election(df_all, distID)  # Terminal race per election period
     df_all = early_dist(df_all, distID)  # First documented race per city
@@ -187,7 +193,7 @@ if __name__ == '__main__':
 
     # df_all.to_csv("../../data/df_race2_all.csv")
 
-    df_all = select_dist(df_all, [[distID, 100]], [['Term Start', datetime(1950, 1, 1)]])
+    df_all = select_dist(df_all, [[distID, 1000]], [['Term Start', datetime(1960, 1, 1)]])
     stat_dist = statistics_dist(df_all, distID)
     stat_election = statistics_election(df_all, distID)
     stat_cand = statistics_candidates(df_all)
@@ -210,5 +216,6 @@ if __name__ == '__main__':
         row_tail = row_name[index][1:]
         df = pd.DataFrame({'Variable': stats.keys(), 'Value': stats.values()}).set_index('Variable', drop=False)
         df = df.reindex(row_tail)
-        df2tex(df, '/Users/yuwang/Dropbox/local politicians/model/analysis_{}/'.format(lookup_office[distID]),
-               '{}.tex'.format(row_head), "%8.2f", 0, ['Value'], ['Variable'], ['Variable', 'Value'])
+        print df
+        # df2tex(df, '/Users/yuwang/Dropbox/local politicians/model/analysis_{}/'.format(lookup_office[distID]),
+        #        '{}.tex'.format(row_head), "%8.2f", 0, ['Value'], ['Variable'], ['Variable', 'Value'])
