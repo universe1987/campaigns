@@ -187,15 +187,16 @@ if __name__ == '__main__':
     df_all = win_follow_ever(df_all)  # Indicator for if ever win/follow a race
     df_all = incumbent_election_v1(df_all, distID)  # If an incumbent exists
     df_all = incumbent_election_v2(df_all, distID)  # If an incumbent exists
-    print df_all['Incumbent2'].value_counts()
     df_all = career_span(df_all)  # Date for first try and last try
     df_all = first_win(df_all)  # Date for first winning
 
     # df_all.to_csv("../../data/df_race2_all.csv")
 
-    df_all = select_dist(df_all, [[distID, 1000]], [['Term Start', datetime(1960, 1, 1)]])
+    df_all = select_dist(df_all, [[distID, 1000]], [['Term Start', datetime(1950, 1, 1)]])
     stat_dist = statistics_dist(df_all, distID)
     stat_election = statistics_election(df_all, distID)
+
+    df_all = df_all[df_all['First Try'] >= df_all['Earlist Date'] + timedelta(days=100)]
     stat_cand = statistics_candidates(df_all)
 
     row_name = [
@@ -209,7 +210,10 @@ if __name__ == '__main__':
          'Winners: Number of Election Periods', 'Winners: Number of Winning Election Periods',
          'Winners: Number of Failed Tries before First Win', 'Winners: Number of Tries After First Win',
          'Winners: Number of Wins After First Win', 'Winners: Number of Fails After First Win',
-         'Losers: Number of Election Periods', ]
+         'Winners: Number of First Win is Challenger','Winners: Number of First Win is Open',
+         'Winners: Number of First Win is Unclear','Losers: Number of Election Periods',
+         'Losers: Number of Challenger Periods','Losers: Number of Open Periods',
+         'Losers: Number of Unclear Periods']
     ]
     for index, stats in enumerate([stat_dist, stat_election, stat_cand]):
         row_head = row_name[index][0]
@@ -217,5 +221,5 @@ if __name__ == '__main__':
         df = pd.DataFrame({'Variable': stats.keys(), 'Value': stats.values()}).set_index('Variable', drop=False)
         df = df.reindex(row_tail)
         print df
-        # df2tex(df, '/Users/yuwang/Dropbox/local politicians/model/analysis_{}/'.format(lookup_office[distID]),
-        #        '{}.tex'.format(row_head), "%8.2f", 0, ['Value'], ['Variable'], ['Variable', 'Value'])
+        df2tex(df, '/Users/yuwang/Dropbox/local politicians/model/analysis_{}/'.format(lookup_office[distID]),
+               '{}.tex'.format(row_head), "%8.2f", 0, ['Value'], ['Variable'], ['Variable', 'Value'])

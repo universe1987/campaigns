@@ -1,5 +1,5 @@
 import pandas as pd
-
+from datetime import datetime, timedelta
 
 def select_dist(df, key_less_cutoff,key_greater_cutoff):
     print 'pre-selection',len(df)
@@ -86,6 +86,7 @@ def statistics_candidates(df_race2_all):
         df_winner_win = df_winner_all[~df_winner_all['winnerID'].isnull()]
         df_winner_lose = df_winner_all[df_winner_all['winnerID'].isnull()]
         df_winner_list = pd.DataFrame(df_winner_all['CandID'].unique(),columns=['CandID'])
+        df_winner_first = df_winner_all[df_winner_all['Term Start']==df_winner_all['First Win']]
         df_loser_all = df_race2_all[df_race2_all['winner ever'] == 0.0]
 
         dict_stat['Number of Unique Candidates'] = len(df_race2_all['CandID'].unique())
@@ -94,11 +95,23 @@ def statistics_candidates(df_race2_all):
         dict_stat['Number of Candidates at least winning once'] = len(df_winner_list)
         dict_stat['Winners: Number of Winning Election Periods'] = df_winner_win.groupby(['CandID'])['Term Start'].nunique().mean()
         dict_stat['Winners: Number of Election Periods'] = df_winner_all.groupby(['CandID'])['Term Start'].nunique().mean()
+        df = df_winner_first[df_winner_first['Incumbent2']==1].groupby(['CandID'])['Term Start'].nunique().reset_index()
+        dict_stat['Winners: Number of First Win is Challenger']= df['Term Start'].sum()
+        df = df_winner_first[df_winner_first['Incumbent2']==0].groupby(['CandID'])['Term Start'].nunique().reset_index()
+        dict_stat['Winners: Number of First Win is Open'] = df['Term Start'].sum()
+        df = df_winner_first[df_winner_first['Incumbent2'] == 2].groupby(['CandID'])['Term Start'].nunique().reset_index()
+        dict_stat['Winners: Number of First Win is Unclear'] = df['Term Start'].sum()
         dict_stat['Number of Candidates never win'] = len(df_loser_all['CandID'].unique())
         dict_stat['Losers: Number of Election Periods'] = df_loser_all.groupby(['CandID'])['Term Start'].nunique().mean()
+        df = df_loser_all[df_loser_all['Incumbent2'] == 1].groupby(['CandID'])['Term Start'].nunique().reset_index()
+        dict_stat['Losers: Number of Challenger Periods']= df['Term Start'].sum()
+        df = df_loser_all[df_loser_all['Incumbent2'] == 0].groupby(['CandID'])['Term Start'].nunique().reset_index()
+        dict_stat['Losers: Number of Open Periods']= df['Term Start'].sum()
+        df = df_loser_all[df_loser_all['Incumbent2'] == 2].groupby(['CandID'])['Term Start'].nunique().reset_index()
+        dict_stat['Losers: Number of Unclear Periods'] = df['Term Start'].sum()
 
-        df_n_before_win = df_winner_all[df_winner_all['Term Start'] < df_winner_all['First Win']].groupby(['CandID'])[
-            'Term Start'].nunique().reset_index()
+
+        df_n_before_win = df_winner_all[df_winner_all['Term Start'] < df_winner_all['First Win']].groupby(['CandID'])['Term Start'].nunique().reset_index()
         df_n_after_win = df_winner_all[df_winner_all['Term Start'] > df_winner_all['First Win']].groupby(['CandID'])[
             'Term Start'].nunique().reset_index()
         df_n_win_after_win = df_winner_win[df_winner_win['Term Start'] > df_winner_win['First Win']].groupby(['CandID'])[
