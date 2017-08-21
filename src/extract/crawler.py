@@ -37,7 +37,7 @@ def crawl(url_list):
                 continue
             position = campactify(components[-2] + components[-1])
             year = int(result['RACE DETAILS']['Term Start'][0]['text'].split('-')[0].split(',')[-1].strip())
-            if year > 2017 or year < 1950:
+            if year > 2017 or year < 1900:
                 continue
             description = 'race_{}_{}'.format(position, year)
         elif category == 'candidate':
