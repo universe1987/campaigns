@@ -8,7 +8,7 @@ from df2tex import df2tex
 
 if __name__ == '__main__':
     lookup_office = {'CityID': 'Mayor', 'StateID': 'Governor'}
-    distID = 'StateID'
+    distID = 'CityID'
 
     df_all = pd.read_pickle("../../data/pdata/df_all_{}.pkl".format(distID))
 
