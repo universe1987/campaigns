@@ -4,13 +4,12 @@ from stat_data import select_dist
 
 def sam(df_all):
     df_sam0 = pd.read_excel("../../data/RA/Sam_2013_Mayoral_candidate_bios.xlsx")
-    print df_sam0['CandID'].nunique()
+    print 'Sam marked:', df_sam0['CandID'].nunique()
     df_sam = df_sam0.groupby(['CandID'])['name'].count().reset_index().rename(columns={'name':'Sam'})
     df_sam = df_sam[~ df_sam['CandID'].isnull()]
 
     df_all = df_all.merge(df_sam, left_on='CandID', right_on='CandID', how ='outer')
-    df_all.loc[:,'Sam'] = df_all['Sam'].astype(str)
-    df_all.loc[:,'Sam'] = (df_all['Sam'].str.contains('(\d+)'))*1.0
+    df_all.loc[:,'Sam'] = df_all['Sam'].astype(str).str.contains('(\d+)')
     return df_all
 
 def sam_source(df_all):
@@ -112,7 +111,6 @@ def sam_source(df_all):
     #http://en.wikipedia.org/wiki/Matt_Gonzalez#2008_presidential_race
     #'2813':
 
-    df_all['Wikipedia'] = df_all['Linkedin'] = df_all['Others1'] = df_all['Others2'] = df_all['Others3'] = df_all['Others4'] = ""
     df_all['CandIDs'] = df_all['CandID'].astype(float)
     for key, value in dic_wiki.iteritems():
         df_all.loc[df_all['CandIDs']==float(key),'Wikipedia']=value
@@ -125,23 +123,21 @@ def sam_source(df_all):
     return df_all
 
 def RA_name_list(df_all,output):
-    df_name_RA = df_all[['Name','City','CityID','CandID','Sam','winner ever','winner_key ever',
+    df_name_RA = df_all[['Name','City','CityID','CandID','winner ever','winner_key ever',
                          'follower ever','follower_key ever','First Try','Last Try',
                          'Wikipedia','Linkedin','Others1', 'Others2', 'Others3', 'Others4']]
 
-    df_name_RA = df_name_RA.groupby(['City','CityID','CandID','Sam','winner ever','winner_key ever',
+    df_name_RA = df_name_RA.groupby(['City','CityID','CandID','winner ever','winner_key ever',
                                      'follower ever','follower_key ever','First Try','Last Try',
                                      'Wikipedia', 'Linkedin', 'Others1', 'Others2', 'Others3', 'Others4'])['Name'].min().reset_index()
 
-    df_name_RA.loc[:, 'CityID'] = df_name_RA['CityID'].astype(float)
-    df_name_RA = df_name_RA.sort_values(['CityID', 'CandID'], ascending=True)
-    df_name_RA['Web'] = df_name_RA['CandID'].astype(int).astype(str)
-    df_name_RA.loc[:, 'Web'] = 'http://www.ourcampaigns.com/CandidateDetail.html?CandidateID=' + df_name_RA['Web']
-    print df_name_RA['CandID'].nunique()
+    df_name_RA['CityID'] = df_name_RA['CityID'].astype(float)
+    df_name_RA.loc[df_name_RA['CityID'] == 21, 'City'] = "DC"
+    df_name_RA = df_name_RA.sort_values(['CityID', 'First Try'], ascending=[True, False])
 
-    df_name_RA.loc[:,'CityID'] = df_name_RA['CityID'].astype(float)
-    df_name_RA = df_name_RA.sort_values(['CityID','First Try'],ascending=[True, False])
-    print 'sam marked:', df_name_RA['Sam'].sum()
+    df_name_RA['Web'] = df_name_RA['CandID'].astype(int).astype(str)
+    df_name_RA['Web'] = 'http://www.ourcampaigns.com/CandidateDetail.html?CandidateID=' + df_name_RA['Web']
+    print df_name_RA['CandID'].nunique()
 
     df_name_RA = df_name_RA[['Name','CandID','City','CityID','Wikipedia','Linkedin','Others1','Others2','Others3','Others4','Web']]
     df_name_RA = df_name_RA.reset_index().drop('index',1)
@@ -151,11 +147,14 @@ def RA_name_list(df_all,output):
 
 if __name__ == '__main__':
     df_name = pd.read_pickle("../../data/pdata/df_all_CityID.pkl")
-    df_name = sam(df_name)
-    df_name = sam_source(df_name)
+    print df_name[df_name['CandID']==122555]
 
     # First Stage:
-    df_task1 = df_name[df_name['winner ever']+df_name['follower ever']+df_name['winner_key ever']+df_name['follower_key ever']>0]
+    df_task1 = sam(df_name)
+    df_task1['Wikipedia'] = df_task1['Linkedin'] = df_task1['Others1'] = df_task1['Others2'] = df_task1['Others3'] = df_task1[
+    'Others4'] = ""
+    df_task1 = sam_source(df_task1)
+    df_task1 = df_task1[df_task1['winner ever']+df_task1['follower ever']+df_task1['winner_key ever']+df_task1['follower_key ever']>0]
     df_task1 = select_dist(df_task1, [['CityID', 150]], [['Last Try', datetime(1970, 1, 1)]])
     RA_name_list(df_task1,'Jeremey_08_02_2017')
     # Jeremey worked hard over a week...
@@ -164,8 +163,15 @@ if __name__ == '__main__':
         df_fruit1.loc[df_fruit1[x].isnull(),x] = 'Not Available'
 
     # Second Stage:
-    df_task2 = select_dist(df_task1, [['CityID', 150]], [['Last Try', datetime(1970, 1, 1)]])
+    # The how='left' needs to be changed to 'outer'
+    df_task2 = df_name.merge(df_fruit1, left_on=['CandID','CityID'],right_on=['CandID','CityID'],how='left')
+    df_task2.to_csv("../../data/RA/task2.csv")
 
-    #RA_name_list(df_task2,)
+    for x in ['City','Name']:
+        df_task2[x] = df_task2["{}_x".format(x)]
+
+    df_task2 = select_dist(df_task2, [['CityID', 150]], [['Last Try', datetime(1970, 1, 1)]])
+    RA_name_list(df_task2, 'Jeremey_08_21_2017')
+
 
 
