@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from stat_data import select_dist
 
 def sam(df_all):
-    df_sam0 = pd.read_excel("../../data/RA/Sam_2013_Mayoral_candidate_bios.xlsx")
+    df_sam0 = pd.read_excel("../../data/RA/rawdata/Sam_2013_Mayoral_candidate_bios.xlsx")
     print 'Sam marked:', df_sam0['CandID'].nunique()
     df_sam = df_sam0.groupby(['CandID'])['name'].count().reset_index().rename(columns={'name':'Sam'})
     df_sam = df_sam[~ df_sam['CandID'].isnull()]
@@ -126,18 +126,21 @@ def RA_name_list(df_all,output):
     df_name_RA = df_all[['Name','City','CityID','CandID','winner ever','winner_key ever',
                          'follower ever','follower_key ever','First Try','Last Try',
                          'Wikipedia','Linkedin','Others1', 'Others2', 'Others3', 'Others4']]
-
-    df_name_RA = df_name_RA.groupby(['City','CityID','CandID','winner ever','winner_key ever',
-                                     'follower ever','follower_key ever','First Try','Last Try',
-                                     'Wikipedia', 'Linkedin', 'Others1', 'Others2', 'Others3', 'Others4'])['Name'].min().reset_index()
-
-    df_name_RA['CityID'] = df_name_RA['CityID'].astype(float)
+    print 'input size', df_name_RA.shape,df_name_RA['CandID'].nunique()
+    df_name_RA = df_name_RA.groupby(['CandID'])['Name','City','CityID','winner ever','winner_key ever',
+                                                'follower ever','follower_key ever','First Try','Last Try',
+                                                'Wikipedia','Linkedin','Others1','Others2','Others3','Others4'].min().reset_index()
+    #df_name_RA = df_name_RA.groupby(['City','CityID','CandID','winner ever','winner_key ever',
+    #                                 'follower ever','follower_key ever','First Try','Last Try',
+    #                                 'Wikipedia', 'Linkedin', 'Others1', 'Others2', 'Others3', 'Others4'])['Name'].min().reset_index()
+    print 'groupby-ed size', df_name_RA.shape,df_name_RA['CandID'].nunique()
+    df_name_RA.loc[:,'CityID'] = df_name_RA['CityID'].astype(float)
     df_name_RA.loc[df_name_RA['CityID'] == 21, 'City'] = "DC"
     df_name_RA = df_name_RA.sort_values(['CityID', 'First Try'], ascending=[True, False])
 
     df_name_RA['Web'] = df_name_RA['CandID'].astype(int).astype(str)
-    df_name_RA['Web'] = 'http://www.ourcampaigns.com/CandidateDetail.html?CandidateID=' + df_name_RA['Web']
-    print df_name_RA['CandID'].nunique()
+    df_name_RA.loc[:,'Web'] = 'http://www.ourcampaigns.com/CandidateDetail.html?CandidateID=' + df_name_RA['Web']
+    print 'Unique N Candidate IDs', df_name_RA['CandID'].nunique()
 
     df_name_RA = df_name_RA[['Name','CandID','City','CityID','Wikipedia','Linkedin','Others1','Others2','Others3','Others4','Web']]
     df_name_RA = df_name_RA.reset_index().drop('index',1)
@@ -148,6 +151,7 @@ def RA_name_list(df_all,output):
 if __name__ == '__main__':
     df_name = pd.read_pickle("../../data/pdata/df_all_CityID.pkl")
     print df_name[df_name['CandID']==122555]
+    # This still needs to be fixed ... DC data is missing
 
     # First Stage:
     df_task1 = sam(df_name)
@@ -155,23 +159,20 @@ if __name__ == '__main__':
     'Others4'] = ""
     df_task1 = sam_source(df_task1)
     df_task1 = df_task1[df_task1['winner ever']+df_task1['follower ever']+df_task1['winner_key ever']+df_task1['follower_key ever']>0]
+    # Note the definition of win has changed quite dramatically.
     df_task1 = select_dist(df_task1, [['CityID', 150]], [['Last Try', datetime(1970, 1, 1)]])
-    RA_name_list(df_task1,'Jeremey_08_02_2017')
-    # Jeremey worked hard over a week...
-    df_fruit1 = pd.read_csv("../../data/RA/Jeremey_08_07_2017.csv")
-    for x in ['Wikipedia','Linkedin']:
+    df_task1 = RA_name_list(df_task1,'Jeremey_08_02_2017')
+    # Jeremey worked hard for a week...
+    df_fruit1 = pd.read_csv("../../data/RA/rawdata/Jeremey_08_07_2017.csv")
+    for x in ['Wikipedia','Linkedin','Others1','Others2','Others3','Others4']:
         df_fruit1.loc[df_fruit1[x].isnull(),x] = 'Not Available'
 
     # Second Stage:
-    # The how='left' needs to be changed to 'outer'
     df_task2 = df_name.merge(df_fruit1, left_on=['CandID','CityID'],right_on=['CandID','CityID'],how='left')
-    df_task2.to_csv("../../data/RA/task2.csv")
-
     for x in ['City','Name']:
         df_task2[x] = df_task2["{}_x".format(x)]
-
     df_task2 = select_dist(df_task2, [['CityID', 150]], [['Last Try', datetime(1970, 1, 1)]])
-    RA_name_list(df_task2, 'Jeremey_08_21_2017')
+    RA_name_list(df_task2, 'Jeremey_08_23_2017')
 
 
 
