@@ -65,7 +65,8 @@ def generate_race_details_table(position):
     df = select_tables(JSON_DIR, position, 'RaceDetails')
     date_cols = ['Polls Close', 'Term Start', 'Term End']
     for column_title in date_cols:
-        df[column_title] = pd.to_datetime(df[column_title].str.split('-').str[0], errors='coerce')
+        df[column_title] = pd.to_datetime(df[column_title].str.split('-').str[0].str.replace('00,', '01,'),
+                                          errors='coerce')
     df['State'] = df['Parents'].str.split('>').str[2].str.strip()
     adjust_name(df, 'State', {"Hawai'i": "Hawaii", "Territory of Alaska": "Alaska", "Territory of Hawai'i": "Hawaii"})
     if position == 'Mayor':
@@ -114,7 +115,7 @@ def merge_city(df):
 
     city_name_lookup = {}
     city_name_correspondence = pd.merge(df[['City', 'RaceID']], df_city[['city_name', 'RaceID']])
-    for row in city_name_correspondence[['City', 'city_name']]:
+    for row in city_name_correspondence[['City', 'city_name']].values:
         city_name_lookup[row[0]] = row[1]
     adjust_name(df, 'City', city_name_lookup)
     return df.merge(df_city[['city_name', 'CityID', 'state']], left_on=['City', 'State'],
@@ -133,7 +134,7 @@ def merge_state(df):
 if __name__ == '__main__':
     lookup_office = {'CityID': 'Mayor', 'StateID': 'Governor'}
 
-    for distID in ['CityID', 'StateID']:
+    for distID in ['CityID','StateID']:
         sw = StopWatch()
         df_race_details = generate_race_details_table(position=lookup_office[distID])
         sw.tic('generate race details table')
@@ -156,8 +157,9 @@ if __name__ == '__main__':
         df_tmp = df_tmp[df_tmp['Term End'] - df_tmp['Term Start'] > timedelta(days=360)]
         print df_tmp.shape
         df_all = df_tmp.merge(df_m, left_on="RaceID", right_on="RaceID")
+        print 'test1', df_all[df_all['CandID'].astype(str).str.contains('76760')]
 
-        todrop = ['22593', '191', '19359', '30530', '4666', '4667']
+        todrop = ['3567','22593', '191', '19359', '30530', '4666', '4667']
         for x in todrop:
             df_all = df_all.drop(df_all[df_all['CandID'] == x].index)
 
@@ -189,6 +191,7 @@ if __name__ == '__main__':
         df_all = incumbent_election_v2(df_all, distID)  # If an incumbent exists
         df_all = career_span(df_all)  # Date for first try and last try
         df_all = first_win(df_all)  # Date for first winning
+
 
         df_all.to_csv("../../data/pdata/df_all_{}.csv".format(distID))
         df_all.to_pickle("../../data/pdata/df_all_{}.pkl".format(distID))

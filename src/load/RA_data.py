@@ -150,8 +150,6 @@ def RA_name_list(df_all,output):
 
 if __name__ == '__main__':
     df_name = pd.read_pickle("../../data/pdata/df_all_CityID.pkl")
-    print df_name[df_name['CandID']==122555]
-    # This still needs to be fixed ... DC data is missing
 
     # First Stage:
     df_task1 = sam(df_name)
@@ -168,8 +166,9 @@ if __name__ == '__main__':
         df_fruit1.loc[df_fruit1[x].isnull(),x] = 'Not Available'
 
     # Second Stage:
-    df_task2 = df_name.merge(df_fruit1, left_on=['CandID','CityID'],right_on=['CandID','CityID'],how='left')
-    for x in ['City','Name']:
+    df_task2 = df_name.merge(df_fruit1, left_on=['CandID'],right_on=['CandID'],how='outer')
+    df_task2.to_csv("../../data/RA/task2.csv")
+    for x in ['CityID','City','Name']:
         df_task2[x] = df_task2["{}_x".format(x)]
     df_task2 = select_dist(df_task2, [['CityID', 150]], [['Last Try', datetime(1970, 1, 1)]])
     RA_name_list(df_task2, 'Jeremey_08_23_2017')
