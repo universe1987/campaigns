@@ -21,6 +21,8 @@ from stat_data import *
 def select_tables(folder, office, table_title):
     content = {'RaceID': []}
     input_file_pattern = '{}/race*{}*{}.json'.format(folder, office, table_title)
+    if office == 'All':
+        input_file_pattern = '{}/race*{}.json'.format(folder,table_title)
     n_row = 0
     header = set()
     for filename in glob(input_file_pattern):
@@ -132,9 +134,8 @@ def merge_state(df):
 
 
 if __name__ == '__main__':
-    lookup_office = {'CityID': 'Mayor', 'StateID': 'Governor'}
-
-    for distID in ['CityID','StateID']:
+    lookup_office = {'CityID': 'Mayor', 'StateID': 'Governor','AllID':'All'}
+    for distID in ['AllID','CityID','StateID']:
         sw = StopWatch()
         df_race_details = generate_race_details_table(position=lookup_office[distID])
         sw.tic('generate race details table')
@@ -148,16 +149,18 @@ if __name__ == '__main__':
             df_tmp = merge_city(df_race_details)
             for s in ['Vice Mayor', 'Mayor Pro Tem']:
                 df_tmp = df_tmp[df_tmp['Position'] != s]
-        else:
+        elif distID == 'StateID':
             df_tmp = merge_state(df_race_details)
             df_tmp = df_tmp[df_tmp['Position'] == 'Governor']
+        elif distID == 'AllID':
+            df_tmp = df_race_details
+
         print df_tmp.shape
         df_tmp = df_tmp[df_tmp['Type'].str.contains('Election')]
         print df_tmp.shape
         df_tmp = df_tmp[df_tmp['Term End'] - df_tmp['Term Start'] > timedelta(days=360)]
         print df_tmp.shape
         df_all = df_tmp.merge(df_m, left_on="RaceID", right_on="RaceID")
-        print 'test1', df_all[df_all['CandID'].astype(str).str.contains('76760')]
 
         todrop = ['3567','22593', '191', '19359', '30530', '4666', '4667']
         for x in todrop:
@@ -165,33 +168,34 @@ if __name__ == '__main__':
 
         df_all = df_all[~df_all['Term End'].isnull()]
 
-        df_all = term_start_merge(df_all, distID, timedelta(days=120))
-        print 'Total =', df_all.groupby([distID])['Term Start'].nunique().reset_index().sum()
-        # Package close-date elections in one election period
-        # Frequent data-input errors: 'Term Start' differs in primary and general elections
+        if distID in ['CityID','StateID']:
+            df_all = term_start_merge(df_all, distID, timedelta(days=120))
+            print 'Total =', df_all.groupby([distID])['Term Start'].nunique().reset_index().sum()
+            # Package close-date elections in one election period
+            # Frequent data-input errors: 'Term Start' differs in primary and general elections
 
-        df_all = terminal_election(df_all, distID)  # Terminal race per election period
-        df_all = early_dist(df_all, distID)  # First documented race per city
+            df_all = terminal_election(df_all, distID)  # Terminal race per election period
+            df_all = early_dist(df_all, distID)  # First documented race per city
 
-        df_win = df_all[df_all['Terminal']]
-        df_all = winner_follower(df_all, df_win, distID, 'winner')  # Indicator for winner per terminal race
+            df_win = df_all[df_all['Terminal']]
+            df_all = winner_follower(df_all, df_win, distID, 'winner')  # Indicator for winner per terminal race
 
-        df_follow = df_all[df_all['Terminal'] & ~df_all['winner']]
-        df_all = winner_follower(df_all, df_follow, distID, 'follower')  # Indicator for follower per terminal race
+            df_follow = df_all[df_all['Terminal'] & ~df_all['winner']]
+            df_all = winner_follower(df_all, df_follow, distID, 'follower')  # Indicator for follower per terminal race
 
-        df_all = key_election(df_all, distID)  # Key race per election period by turnout
+            df_all = key_election(df_all, distID)  # Key race per election period by turnout
 
-        df_win_key = df_all[df_all['KeyRace']]
-        df_all = winner_follower(df_all, df_win_key, distID, 'winner_key')  # Indicator for winner per key race
-        df_follow_key = df_all[df_all['KeyRace'] & ~df_all['winner_key']]
-        df_all = winner_follower(df_all, df_follow_key, distID, 'follower_key')  # Indicator for follower per key race
+            df_win_key = df_all[df_all['KeyRace']]
+            df_all = winner_follower(df_all, df_win_key, distID, 'winner_key')  # Indicator for winner per key race
+            df_follow_key = df_all[df_all['KeyRace'] & ~df_all['winner_key']]
+            df_all = winner_follower(df_all, df_follow_key, distID, 'follower_key')  # Indicator for follower per key race
 
-        df_all = win_follow_ever(df_all)  # Indicator for if ever win/follow a race
-        df_all = incumbent_election_v1(df_all, distID)  # If an incumbent exists
-        df_all = incumbent_election_v2(df_all, distID)  # If an incumbent exists
-        df_all = career_span(df_all)  # Date for first try and last try
-        df_all = first_win(df_all)  # Date for first winning
-
+            df_all = win_follow_ever(df_all)  # Indicator for if ever win/follow a race
+            df_all = incumbent_election_v1(df_all, distID)  # If an incumbent exists
+            df_all = incumbent_election_v2(df_all, distID)  # If an incumbent exists
+            df_all = career_span(df_all)  # Date for first try and last try
+            df_all = first_win(df_all)  # Date for first winning
 
         df_all.to_csv("../../data/pdata/df_all_{}.csv".format(distID))
         df_all.to_pickle("../../data/pdata/df_all_{}.pkl".format(distID))
+
